@@ -29,6 +29,13 @@ jobs:
       - name: Create platform folders
         run: flutter create --project-name ragraa_flutter_app .
 
+      - name: Configure Android permissions and SDK versions
+        run: |
+          sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET"\/>\n    <application/' android/app/src/main/AndroidManifest.xml
+          sed -i 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 34/' android/app/build.gradle
+          sed -i 's/targetSdkVersion flutter.targetSdkVersion/targetSdkVersion 34/' android/app/build.gradle
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 24/' android/app/build.gradle
+
       - name: Install Dependencies
         run: flutter pub get
 
