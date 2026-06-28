@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dashboard_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:webview_cookie_manager/webview_cookie_manager.dart';
 import '../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -26,9 +27,9 @@ class _LoginScreenState extends State<LoginScreen> {
             setState(() {
               _isLoading = false;
             });
-            // Check if login is successful by checking cookies or redirect
-            if (url.contains('Student/StudentDashBoard') || url.contains('Home')) {
-              _extractCookiesAndNavigate();
+            // Check if login is successful by checking if we navigated away from the login page
+            if (!url.toLowerCase().contains('login')) {
+              _extractCookiesAndNavigate(url);
             }
           },
         ),
@@ -36,19 +37,21 @@ class _LoginScreenState extends State<LoginScreen> {
       ..loadRequest(Uri.parse('https://flexstudent.nu.edu.pk/Login'));
   }
 
-  Future<void> _extractCookiesAndNavigate() async {
-    final String cookies = await _controller.runJavaScriptReturningResult('document.cookie') as String;
-    // Basic extraction of ASP.NET_SessionId
-    final match = RegExp(r'ASP\.NET_SessionId=([^;]+)').firstMatch(cookies);
-    if (match != null) {
-      final sessionId = match.group(1)!;
-      context.read<ApiService>().setSessionId(sessionId);
-      
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
-      );
+  Future<void> _extractCookiesAndNavigate(String url) async {
+    final cookieManager = WebviewCookieManager();
+    final cookies = await cookieManager.getCookies('https://flexstudent.nu.edu.pk');
+    
+    for (var cookie in cookies) {
+      if (cookie.name == 'ASP.NET_SessionId') {
+        context.read<ApiService>().setSessionId(cookie.value);
+        
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+        return;
+      }
     }
   }
 
