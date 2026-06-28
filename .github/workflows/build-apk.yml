@@ -27,7 +27,7 @@ jobs:
           channel: 'stable'
 
       - name: Create platform folders
-        run: flutter create .
+        run: flutter create --project-name ragraa_flutter_app .
 
       - name: Install Dependencies
         run: flutter pub get
